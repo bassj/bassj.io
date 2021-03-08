@@ -102,12 +102,8 @@
                 vertices.push({ x, y, z});
             } else if (split[0] == 'f') {
                 for (let i = 2; i < split.length; i++) {
-                    console.log(split[i])
                     const startIndex = parseInt(split[i - 1]) - 1;
                     const endIndex = parseInt(split[i]) - 1;
-
-                    console.log(startIndex);
-                    console.log(endIndex);
 
                     const start = vertices[startIndex];
                     const end = vertices[endIndex];
@@ -119,8 +115,6 @@
                 }
             }
         });
-
-        console.log(vertices.length);
 
         return polygon;
     }
