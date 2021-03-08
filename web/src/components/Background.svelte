@@ -414,9 +414,5 @@ f 6 7 20 11 15
     });
 </script>
 
-<svelte:head>
-    <script id="dodecahedron" type="model/obj" src="/models/dodecahedron.obj"></script>
-</svelte:head>
-
 <canvas class="background" on:mousedown={mouseDown} on:mouseup={mouseUp}>
 </canvas>
