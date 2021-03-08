@@ -12,7 +12,7 @@
 <script>
     import { onMount } from "svelte";
 
-    const polygon = [
+    let polygon = [
         {
             start: point(-1, -1, -1),
             end: point(1, -1, -1)
@@ -85,6 +85,45 @@
         width: 500,
         height: 500
     };
+
+    function loadObj(source) {
+        const lines = source.split('\n');
+
+        let vertices = [];
+
+        let polygon = [];
+
+        lines.forEach(function (line) {
+            const split = line.split(' ');
+            if (split[0] == 'v') {
+                const x = parseFloat(split[1]);
+                const y = parseFloat(split[2]);
+                const z = parseFloat(split[3]);
+                vertices.push({ x, y, z});
+            } else if (split[0] == 'f') {
+                for (let i = 2; i < split.length; i++) {
+                    console.log(split[i])
+                    const startIndex = parseInt(split[i - 1]) - 1;
+                    const endIndex = parseInt(split[i]) - 1;
+
+                    console.log(startIndex);
+                    console.log(endIndex);
+
+                    const start = vertices[startIndex];
+                    const end = vertices[endIndex];
+
+                    polygon.push({
+                        start,
+                        end
+                    });
+                }
+            }
+        });
+
+        console.log(vertices.length);
+
+        return polygon;
+    }
 
     function point(x, y, z) {
         return {x, y, z};
@@ -183,6 +222,24 @@
         return norm;
     }
 
+    function sqr(x) { return x * x }
+    function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
+
+    function min_dist(point, line) {
+        const l2 = dist2(line.start, line.end);
+        if (l2 == 0) return dist2(point, line.start);
+
+        let t = ((point.x - line.start.x) * (line.end.x - line.start.x) + (point.y - line.start.y) * (line.end.y - line.start.y)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        
+        const dist_sqr = dist2(point, {
+            x: line.start.x + t * (line.end.x - line.start.x),
+            y: line.start.y + t * (line.end.y - line.start.y)
+        });
+
+        return Math.sqrt(dist_sqr);
+    }
+
     function explode(line, distance) {
         const mid = {
             x: line.start.x + (line.end.x - line.start.x) / 2,
@@ -190,12 +247,12 @@
             z: line.start.z + (line.end.z - line.start.z) / 2,
         };
 
-        const proj_mid = projectPoint(mid);
+        const proj_line = {
+            start: projectPoint(line.start),
+            end: projectPoint(line.end)
+        };
 
-        const dx = proj_mid.x - mousePos.x;
-        const dy = proj_mid.y - mousePos.y;
-
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const dist = min_dist(mousePos, proj_line);
 
         let explosion_bias = 1.0;
 
@@ -297,12 +354,50 @@
         isMouseDown = false;
     }
 
-    onMount(() => {
+    onMount(async () => {
         const background = document.querySelector("canvas.background");
         const ctx = background.getContext('2d');
 
         const width = background.clientWidth;
         const height = background.clientHeight;
+
+        const modelSource = `v 0 0.618034 1.61803
+v 0 -0.618034 1.61803
+v 0 -0.618034 -1.61803
+v 0 0.618034 -1.61803
+v 1.61803 0 0.618034
+v -1.61803 0 0.618034
+v -1.61803 0 -0.618034
+v 1.61803 0 -0.618034
+v 0.618034 1.61803 0
+v -0.618034 1.61803 0
+v -0.618034 -1.61803 0
+v 0.618034 -1.61803 0
+v 1 1 1
+v -1 1 1
+v -1 -1 1
+v 1 -1 1
+v 1 -1 -1
+v 1 1 -1
+v -1 1 -1
+v -1 -1 -1
+# 20 vertices
+
+f 1 2 16 5 13
+f 1 13 9 10 14
+f 1 14 6 15 2
+f 2 15 11 12 16
+f 3 4 18 8 17
+f 3 17 12 11 20
+f 3 20 7 19 4
+f 19 10 9 18 4
+f 16 12 17 8 5
+f 5 8 18 9 13
+f 14 10 19 7 6
+f 6 7 20 11 15
+# 12 faces`;
+
+        polygon = loadObj(modelSource);
 
         window.addEventListener("resize", function (e) {
             background.width = background.clientWidth;
@@ -324,6 +419,10 @@
         });
     });
 </script>
+
+<svelte:head>
+    <script id="dodecahedron" type="model/obj" src="/models/dodecahedron.obj"></script>
+</svelte:head>
 
 <canvas class="background" on:mousedown={mouseDown} on:mouseup={mouseUp}>
 </canvas>

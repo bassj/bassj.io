@@ -100,7 +100,7 @@
 				my twitter
 			</span>
 		</a>
-		<a class="icon discord" href="/">
+		<a class="icon discord" href="https://discordapp.com/users/126832247557980160">
 			<span class="sr-only">
 				my discord
 			</span>
